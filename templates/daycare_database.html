@@ -1,34 +1,37 @@
-<!-- templates/daycare_database.html -->
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Daycare Database</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'myapp/styles.css' %}">
     <link href="https://cdn.jsdelivr.net/npm/handsontable@8.4.0/dist/handsontable.full.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/handsontable@8.4.0/dist/handsontable.full.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>  <!-- Add jQuery for AJAX -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 <body>
-    <button id="modifyButton">Modify</button>
-    <button id="saveButton" disabled>Save</button>
-    <button id="backButton">Back to Menu</button>
-    <div id="example"></div>
+    <div id="menu">
+        <h1>Database</h1>
+        <div id="example"></div>
+        <div id="buttons">
+            <button id="modifyButton">Modify</button>
+            <button id="saveButton" disabled>Save</button>
+            <button id="backButton">Back to Menu</button>
+        </div>
 
-    <script>
-        var data = {{ data|safe }};  // Assuming 'data' is your CSV data passed from Django view
-
-        var container = document.getElementById('example');
-        var hot = new Handsontable(container, {
-            data: data,
-            rowHeaders: true,
-            // Set custom column headers
-            colHeaders: ['Name', 'Age', 'Balance'],
-            // Disable dropdown menu
-            dropdownMenu: false,
-            columnSorting: {
-                indicator: true  // To show the sorting indicator (ascending/descending arrow)
-            },
-            readOnly: true,  // Make cells read-only by default
+        <script>
+            var data = {{ data|safe }};
+            var container = document.getElementById('example');
+            var hot = new Handsontable(container, {
+                data: data,
+                rowHeaders: true,
+                colHeaders: ['Name', 'Age', 'Balance'],
+                dropdownMenu: false,
+                columnSorting: {
+                    indicator: true
+                },
+                readOnly: true,
+                licenseKey: 'non-commercial-and-evaluation',
             cells: function(row, col, prop) {
                 var cellProperties = {};
                 // Make only the Balance column non-editable
@@ -47,14 +50,38 @@
         });
 
         document.getElementById('saveButton').addEventListener('click', function() {
+            // Capture the updated data
+            var updatedData = hot.getData();
+        
+            // Create a set to store unique names
+            var namesSet = new Set();
+        
+            // Iterate over the updated data
+            for (var i = 0; i < updatedData.length; i++) {
+                var name = updatedData[i][0];  // Name is in the first column
+                var age = updatedData[i][1];  // Age is in the second column
+        
+                // Check for duplicate names
+                if (namesSet.has(name)) {
+                    alert('Duplicate name: ' + name);
+                    return;  // Stop the saving process
+                } else {
+                    namesSet.add(name);
+                }
+        
+                // Check if age is a number and less than or equal to 5
+                if (isNaN(age) || age > 5) {
+                    alert('Invalid age for: ' + name + '\nAge must be a number and less than or equal to 5');
+                    return;  // Stop the saving process
+                }
+            }
+        
+            // If no validation errors, proceed with the saving process
             hot.updateSettings({readOnly: true});  // Disable cell editing
             this.disabled = true;  // Disable the Save button
             document.getElementById('modifyButton').disabled = false;  // Enable the Modify button
             document.getElementById('backButton').disabled = false;  // Enable the Back to Menu button
-
-            // Capture the updated data
-            var updatedData = hot.getData();
-
+        
             // Send the updated data to your Django view
             $.ajax({
                 url: '/update-csv-full/',  // URL of Django view

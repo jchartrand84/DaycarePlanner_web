@@ -7,7 +7,7 @@ body {
 
 #menu {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Change this from row to column */
     justify-content: center;
     align-items: center;
     height: 100vh;
@@ -32,4 +32,23 @@ body {
 
 #menu button {
     cursor: pointer;
+}
+
+h1 {
+    font-family: Arial, sans-serif;
+    font-weight: 900; /* Use a bolder font weight */
+    color: #1a1a1a; /* Use a darker color for better contrast */
+    font-size: 2.0em; /* Increase the font size if space permits */
+    letter-spacing: 1px; /* Increase letter spacing for better readability */
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5); /* Add a more pronounced drop shadow */
+    background: rgba(255, 255, 255, 0.5); /* Add a semi-transparent background for contrast */
+    -webkit-text-stroke: 0.5px #000; /* Add a subtle outline to the text */
+}
+
+.fc .fc-toolbar-title {
+    font-family: Arial, sans-serif; /* Choose a sans-serif font */
+    font-weight: bold; /* Use a medium to bold font weight */
+    color: #333; /* Use a dark grey color */
+    font-size: 2em; /* Adjust the size as needed */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Add a subtle drop shadow */
 }
