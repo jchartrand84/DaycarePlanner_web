@@ -1,15 +1,16 @@
-<!-- myapp/templates/myapp/menu.html -->
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Menu</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'myapp/styles.css' %}">
 </head>
 <body>
     <div id="menu">
         <a href="{% url 'daycare_database' %}">View Database</a>
-        <button type="button">Button 2</button>
-        <button type="button">Button 3</button>
+        <a href="{% url 'payment_menu' %}">Payment Menu</a>
+        <a href="{% url 'daycare_scheduler' %}">Daycare Schedule</a>
     </div>
 </body>
 </html>

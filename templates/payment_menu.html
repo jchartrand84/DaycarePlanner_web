@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Menu</title>
+    <link href="https://cdn.jsdelivr.net/npm/handsontable@8.4.0/dist/handsontable.full.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/handsontable@8.4.0/dist/handsontable.full.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <div id="example"></div>
+    <select id="nameSelect"></select>
+    <input type="number" id="paymentAmount" min="0" placeholder="Enter payment amount">
+    <button id="applyPaymentButton">Apply Payment</button>
+    <button id="backButton">Back to Menu</button>
+
+    <script>
+        var data = {{ data|safe }};
+        // Keep the 'Name', 'Age' and 'Balance' columns
+        data = data.map(function(row) {
+            return [row[0], row[1], row[2]];
+        });
+        var container = document.getElementById('example');
+        var hot = new Handsontable(container, {
+            data: data,
+            rowHeaders: true,
+            colHeaders: ['Name', 'Age', 'Balance'],
+            dropdownMenu: false,
+            columnSorting: {
+                indicator: true
+            },
+            readOnly: true,  // Make all cells read-only
+            afterLoadData: function() {
+                var select = document.getElementById('nameSelect');
+                data.forEach(function(row) {
+                    var option = document.createElement('option');
+                    option.text = row[0];
+                    select.add(option);
+                });
+            },
+        });
+
+        document.getElementById('applyPaymentButton').addEventListener('click', function() {
+            var name = document.getElementById('nameSelect').value;
+            var paymentAmount = parseFloat(document.getElementById('paymentAmount').value);
+            var row = data.findIndex(function(row) {
+                return row[0] === name;
+            });
+            if (row !== -1) {
+                var balance = parseFloat(data[row][2]);
+                if (paymentAmount <= balance) {
+                    balance -= paymentAmount;
+                    data[row][2] = balance > 0 ? balance.toString() : '0';  // Set balance to 0 if it's less than or equal to 0
+                    hot.loadData(data);
+                    $.ajax({
+                        url: '/update-csv-single/',  // URL of Django view
+                        method: 'POST',
+                        data: {
+                            'data': JSON.stringify([data[row]]),  // Only send the updated row
+                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                        }
+                    });
+                } else {
+                    alert('Payment amount cannot be greater than balance.');
+                }
+            } else {
+                alert('Please select a name.');
+            }
+        });
+
+        document.getElementById('backButton').addEventListener('click', function() {
+            window.location.href = '/menu/';  // Navigate back to the main menu
+        });
+    </script>
+</body>
+</html>

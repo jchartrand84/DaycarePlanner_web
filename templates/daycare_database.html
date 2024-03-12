@@ -11,11 +11,12 @@
 <body>
     <button id="modifyButton">Modify</button>
     <button id="saveButton" disabled>Save</button>
+    <button id="backButton">Back to Menu</button>
     <div id="example"></div>
 
     <script>
         var data = {{ data|safe }};  // Assuming 'data' is your CSV data passed from Django view
-        
+
         var container = document.getElementById('example');
         var hot = new Handsontable(container, {
             data: data,
@@ -42,25 +43,33 @@
             hot.updateSettings({readOnly: false});  // Enable cell editing
             this.disabled = true;  // Disable the Modify button
             document.getElementById('saveButton').disabled = false;  // Enable the Save button
+            document.getElementById('backButton').disabled = true;  // Disable the Back to Menu button
         });
 
         document.getElementById('saveButton').addEventListener('click', function() {
             hot.updateSettings({readOnly: true});  // Disable cell editing
             this.disabled = true;  // Disable the Save button
             document.getElementById('modifyButton').disabled = false;  // Enable the Modify button
+            document.getElementById('backButton').disabled = false;  // Enable the Back to Menu button
 
             // Capture the updated data
             var updatedData = hot.getData();
 
             // Send the updated data to your Django view
             $.ajax({
-                url: '/update-csv/',  // URL of Django view
+                url: '/update-csv-full/',  // URL of Django view
                 method: 'POST',
                 data: {
                     'data': JSON.stringify(updatedData),  // Get all data from Handsontable and convert it to JSON
                     'csrfmiddlewaretoken': '{{ csrf_token }}'  // CSRF token for Django
                 }
             });
+        });
+
+        document.getElementById('backButton').addEventListener('click', function() {
+            if (!this.disabled) {  // Only navigate back if the Back to Menu button is not disabled
+                window.location.href = 'menu.html';  // Navigate back to menu.html
+            }
         });
     </script>
 </body>

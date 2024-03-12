@@ -1,0 +1,35 @@
+body {
+    background-image: url('https://chartrandstorage.blob.core.windows.net/project3data/menubackground.webp');
+    background-size: cover;
+    background-position: center;
+    font-family: Arial, sans-serif;
+}
+
+#menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+#menu a, #menu button {
+    margin: 10px;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    color: #fff;
+    background-color: #007BFF;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+#menu a:hover, #menu button:hover {
+    background-color: #0056b3;
+}
+
+#menu button {
+    cursor: pointer;
+}

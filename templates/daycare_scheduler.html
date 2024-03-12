@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Daycare Scheduler</title>
+    <!-- Include FullCalendar CSS -->
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css' rel='stylesheet' />
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+        }
+
+        .fc .fc-toolbar-title {
+            color: #ecf0f1;
+        }
+        .fc .fc-button {
+            background-color: #34495e;
+            color: #ecf0f1;
+        }
+        .fc .fc-button:hover {
+            background-color: #a37e8b;
+            color: #ecf0f1;
+        }
+
+        /* Set the height of the calendar to 100vh to make it fill the screen */
+        #calendar {
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <!-- Create a div where the calendar will be displayed -->
+    <div id='calendar'></div>
+
+    <!-- Create a modal for adding attendance records -->
+    <div id="attendanceModal" class="modal">
+        <div class="modal-content">
+            <h4>Add/Remove Attendance Record</h4>
+            <select id="childrenDropdown"></select>
+            <button id="addButton">Add</button>
+            <button id="removeButton">Remove</button>  <!-- New "Remove" button -->
+            <button id="closeButton">Close</button>
+        </div>
+    </div>
+
+    <!-- Back to Main Menu button -->
+    <button onclick="location.href='menu.html'">Back to Main Menu</button>
+
+    <!-- Hidden input field for selected date -->
+    <input type="hidden" id="selectedDate">
+
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+    <!-- Include Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <!-- Include FullCalendar JS -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js'></script>
+
+    <script>
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Function to check if an attendance record exists
+        function checkAttendanceRecord(child, date) {
+            $.ajax({
+                url: '/check_attendance_record/',
+                type: 'post',
+                data: {child: child, date: date},
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                success: function(response) {
+                    console.log('Response:', response, 'Type of response.exists:', typeof response.exists);  // Debug log
+                    if (response.exists) {
+                        $('#removeButton').prop('disabled', false);
+                    } else {
+                        $('#removeButton').prop('disabled', true);
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('Error checking attendance record:', textStatus, errorThrown);
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                selectable: true,
+                height: 'auto',  // Set height to 'auto'
+                dateClick: function(info) {
+                    console.log('Date clicked: ' + info.dateStr);  // Log the clicked date
+                    $('#attendanceModal').modal('show');  // Open the modal
+                    $('#selectedDate').val(info.dateStr);  // Set the selected date
+                    var child = $('#childrenDropdown').val();
+                    checkAttendanceRecord(child, info.dateStr);
+                },
+                events: '/get_attendance_records/',  // Fetch attendance records from this URL
+            });
+            calendar.render();
+
+            // Fetch the list of children and populate the dropdown menu
+            $.get('/get_children/', function(data) {
+                var dropdown = $('#childrenDropdown');
+                data.forEach(function(child) {
+                    dropdown.append(new Option(child, child));
+                });
+            });
+
+            // Add an attendance record when the "Add" button is clicked
+            $('#addButton').click(function() {
+                var child = $('#childrenDropdown').val();
+                var date = $('#selectedDate').val();
+                $.ajax({
+                    url: '/add_attendance_record/',
+                    type: 'post',
+                    data: {child: child, date: date},
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            alert('Added attendance record for ' + child + ' on ' + date);
+                        } else if (response.status === 'error') {
+                            alert('Error: ' + response.message);
+                        }
+                        $('#attendanceModal').modal('hide');  // Close the modal
+                        calendar.refetchEvents();  // Refresh the calendar
+                    }
+                });
+            });
+
+            // Remove an attendance record when the "Remove" button is clicked
+            $('#removeButton').click(function() {
+                var child = $('#childrenDropdown').val();
+                var date = $('#selectedDate').val();
+                $.ajax({
+                    url: '/remove_attendance_record/',
+                    type: 'post',
+                    data: {child: child, date: date},
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            alert('Removed attendance record for ' + child + ' on ' + date);
+                        } else if (response.status === 'error') {
+                            alert('Error: ' + response.message);
+                        }
+                        $('#attendanceModal').modal('hide');  // Close the modal
+                        calendar.refetchEvents();  // Refresh the calendar
+                    }
+                });
+            });
+
+            // Close the modal when the "Close" button is clicked
+            $('#closeButton').click(function() {
+                $('#attendanceModal').modal('hide');
+            });
+
+            // Check if an attendance record exists when a different child is selected
+            // Check if an attendance record exists when a different child is selected
+            $('#childrenDropdown').change(function() {
+                var child = $(this).val();
+                var date = $('#selectedDate').val();
+                console.log('Dropdown changed: ' + child);  // Log the selected child
+                checkAttendanceRecord(child, date);
+            });
+        });
+    </script>
+</body>
+</html>
