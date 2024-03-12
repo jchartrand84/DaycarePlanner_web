@@ -1,0 +1,67 @@
+<!-- templates/daycare_database.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Daycare Database</title>
+    <link href="https://cdn.jsdelivr.net/npm/handsontable@8.4.0/dist/handsontable.full.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/handsontable@8.4.0/dist/handsontable.full.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>  <!-- Add jQuery for AJAX -->
+</head>
+<body>
+    <button id="modifyButton">Modify</button>
+    <button id="saveButton" disabled>Save</button>
+    <div id="example"></div>
+
+    <script>
+        var data = {{ data|safe }};  // Assuming 'data' is your CSV data passed from Django view
+        
+        var container = document.getElementById('example');
+        var hot = new Handsontable(container, {
+            data: data,
+            rowHeaders: true,
+            // Set custom column headers
+            colHeaders: ['Name', 'Age', 'Balance'],
+            // Disable dropdown menu
+            dropdownMenu: false,
+            columnSorting: {
+                indicator: true  // To show the sorting indicator (ascending/descending arrow)
+            },
+            readOnly: true,  // Make cells read-only by default
+            cells: function(row, col, prop) {
+                var cellProperties = {};
+                // Make only the Balance column non-editable
+                if (col === 2) {
+                    cellProperties.readOnly = true;
+                }
+                return cellProperties;
+            },
+        });
+
+        document.getElementById('modifyButton').addEventListener('click', function() {
+            hot.updateSettings({readOnly: false});  // Enable cell editing
+            this.disabled = true;  // Disable the Modify button
+            document.getElementById('saveButton').disabled = false;  // Enable the Save button
+        });
+
+        document.getElementById('saveButton').addEventListener('click', function() {
+            hot.updateSettings({readOnly: true});  // Disable cell editing
+            this.disabled = true;  // Disable the Save button
+            document.getElementById('modifyButton').disabled = false;  // Enable the Modify button
+
+            // Capture the updated data
+            var updatedData = hot.getData();
+
+            // Send the updated data to your Django view
+            $.ajax({
+                url: '/update-csv/',  // URL of Django view
+                method: 'POST',
+                data: {
+                    'data': JSON.stringify(updatedData),  // Get all data from Handsontable and convert it to JSON
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'  // CSRF token for Django
+                }
+            });
+        });
+    </script>
+</body>
+</html>
