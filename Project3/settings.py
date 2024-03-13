@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-js%qn=hw)1trkn2$cl2))0up^7iiy*(u$u$4a6u*^364#rjmey
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['thedaycaremanagementsystem.azurewebsites.net', 'localhost:8000', 'localhost', '169.254.129.4']
+ALLOWED_HOSTS = ['thedaycaremanagementsystem.azurewebsites.net', 'localhost:8000', 'localhost', '169.254.129.4', '169.254.129.3']
 
 
 # Application definition
@@ -118,7 +118,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'myapp' / 'static']
-
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
