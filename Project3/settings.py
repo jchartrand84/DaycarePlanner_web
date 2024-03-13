@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-js%qn=hw)1trkn2$cl2))0up^7iiy*(u$u$4a6u*^364#rjmey
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['thedaycaremanagementsystem.azurewebsites.net','localhost:8000','localhost']
 
 
 # Application definition
